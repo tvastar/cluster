@@ -120,8 +120,7 @@ func WithEndpointRegistry(r EndpointRegistry) Option {
 	}
 }
 
-// Picker implements the algorithm to choose an endpoint given a hash
-// key.
+// WithPicker specifies how the pick endpoints based on the hash.
 //
 // The default algorithm is to use a consistent hash using a hash ring
 // (via NewHashRing()).

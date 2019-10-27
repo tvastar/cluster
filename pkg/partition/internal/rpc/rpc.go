@@ -27,6 +27,7 @@ type RunCloser interface {
 	//io.Closer
 }
 
+// DialClient creates a RPC client
 func DialClient(ctx context.Context, addr string) (client, error) {
 	conn, err := grpc.DialContext(ctx, addr, grpc.WithInsecure())
 	if err != nil {
@@ -35,6 +36,7 @@ func DialClient(ctx context.Context, addr string) (client, error) {
 	return client{conn}, nil
 }
 
+// RegisterServer registers an RPC handler
 func RegisterServer(ctx context.Context, srv *grpc.Server, addr string, handler Runner) (io.Closer, error) {
 	var listener net.Listener
 	if srv == nil {

@@ -13,6 +13,9 @@ import (
 	"sync"
 )
 
+// NewHashRing returns a picker which uses a consistent hashing scheme
+//
+// The scheme is implemented using a hash ring of crc32 hashes.
 func NewHashRing() func(ctx context.Context, list []string, hash uint64) string {
 	ring := &hashring{factor: 1000}
 	return ring.Pick

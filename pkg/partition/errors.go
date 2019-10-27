@@ -19,8 +19,11 @@ func (e *errors) toError() error {
 	return (*e)[0]
 }
 
+// IncorrectPartitionError is a transient error that happens when
+// requests end up on the wrong partition.
 type IncorrectPartitionError struct{}
 
+// Error returns the error string
 func (e IncorrectPartitionError) Error() string {
 	return "incorrect partition, retry later"
 }
