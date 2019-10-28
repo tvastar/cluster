@@ -2,14 +2,14 @@
 // Use of this source code is governed by a MIT-style license
 // that can be found in the LICENSE file.
 
-// Package partition provides utilities to partition request to a cluster.
+// Package partition provides utilities to partition requests to a cluster.
 //
-// Every server in the cluster receives requests meant for any specific
+// Every server in the cluster receives requests meant for any
 // partition but these requests are then routed to the right partition
 // where it is handled.
 //
 // Each server in the cluster also serves traffic from other servers
-// for the partitions it is responsible for.
+// destined for its own partition.
 //
 // Usage;
 //
@@ -38,11 +38,19 @@
 //
 // The effectiveness of this strategy depends on how uniform the hash
 // is and the mapping strategy.  The default mechanism to map hashes
-// to specific servers in the cluster is to use a hashring but this
-// can be overridden using the WithPicker option.
+// to specific servers in the cluster is to use a
+// highest-random-weight algorithm which can be overridden using the
+// WithPicker option.
 //
 // The inter-server communication is via RPC and this also can be
 // configured to alternate mechanisms using the WithNetwork option.
+//
+//
+// The requests and responses are expected to be byte slices. For
+// stronger types, protobufs can be used to serialize structures or
+// the runner package (see
+// https://godoc.org/github.com/tvastar/cluster/pkg/partition/runner)
+// for solution using gob-encoding and reflection.
 package partition
 
 import (
@@ -81,7 +89,7 @@ var defaultConfig = config{
 }
 
 // New returns a RunCloser which targets requests to
-// specific endpoints based on the hash provided to thee request.
+// specific endpoints based on the hash provided to the request.
 //
 // This automatically adds the provided address to the cluster. The
 // provided handler is used to serve requests meant for the local
@@ -91,7 +99,7 @@ var defaultConfig = config{
 // be specified -- no defaults are used for it.
 func New(ctx context.Context, addr string, handler Runner, opts ...Option) (RunCloser, error) {
 	s := &state{config: defaultConfig, addr: addr, handler: handler}
-	s.config.pickEndpoint = NewHashRing()
+	s.config.pickEndpoint = NewPicker()
 	for _, opt := range opts {
 		opt(&s.config)
 	}
@@ -122,8 +130,8 @@ func WithEndpointRegistry(r EndpointRegistry) Option {
 
 // WithPicker specifies how the pick endpoints based on the hash.
 //
-// The default algorithm is to use a consistent hash using a hash ring
-// (via NewHashRing()).
+// The default algorithm is to use the highest random weight
+// algorithm (via NewPicker())
 func WithPicker(picker func(ctx context.Context, list []string, hash uint64) string) Option {
 	return func(c *config) {
 		c.pickEndpoint = picker
